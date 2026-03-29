@@ -12,6 +12,10 @@ class Conference extends DBObject implements Publishable {
   public $name;
   public $url;
   protected $mail_lists;
+  protected $inactive_on;
+  protected $merged_into;
+  protected $merged_on;
+  protected $merge_note;
   public function __toString() {
     return $this->id;
   }
@@ -20,7 +24,15 @@ class Conference extends DBObject implements Publishable {
   public function db_type($field) {
     if ($field == 'mail_lists')
       return array();
+    if ($field == 'inactive_on' || $field == 'merged_on')
+      return DB::T(DB::NOW);
+    if ($field == 'merged_into')
+      return DB::T(DB::CONFERENCE);
     return parent::db_type($field);
+  }
+
+  public function isActive() {
+    return ($this->inactive_on === null);
   }
 
   /**

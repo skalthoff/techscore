@@ -257,9 +257,10 @@ class SailorSeasonPage extends TPublicPage {
     // ------------------------------------------------------------
     // SCHOOL season summary
     $school_link = new XA($this->sailor->school->getURL(), $this->sailor->school->nick_name);
-    $conference_link = $this->sailor->school->conference;
+    $conference = $this->sailor->school->getConferenceForSeason($this->season);
+    $conference_link = $conference;
     if (DB::g(STN::PUBLISH_CONFERENCE_SUMMARY) !== null) {
-      $conference_link = new XA($this->sailor->school->conference->url, $conference_link);
+      $conference_link = new XA($conference->url, $conference_link);
     }
     $table = array(
       "Graduation Year" => $this->sailor->year,

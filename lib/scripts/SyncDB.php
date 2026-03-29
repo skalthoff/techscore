@@ -227,7 +227,7 @@ class SyncDB extends AbstractScript {
 
         if (!$isTrackedManually) {
           $dist = trim((string)$school->district);
-          $sch->conference = $core::getConference($dist);
+          $sch->conference = $this->resolveConferenceFromDistrict($dist);
           if ($sch->conference === null) {
             $this->errors['conf-'.$dist] = "No valid conference found: " . $dist;
             continue;
@@ -282,6 +282,52 @@ class SyncDB extends AbstractScript {
         $this->errors[] = "Invalid school information: " . $e->getMessage();
       }
     }
+  }
+
+  /**
+   * Resolve conference directly by ID first, then through active aliases.
+   *
+   * This lets external feeds continue using a retired district ID after merge.
+   *
+   * @param string $districtId
+   * @return Conference|null
+   */
+  private function resolveConferenceFromDistrict($districtId) {
+    if ($districtId === null || $districtId === '') {
+      return null;
+    }
+
+    $districtId = strtoupper(trim((string)$districtId));
+    if ($districtId === '') {
+      return null;
+    }
+
+    $conference = DB::getConference($districtId);
+    if ($conference !== null) {
+      return $conference;
+    }
+
+    $con = DB::connection();
+    $stmt = $con->prepare('SELECT conference FROM conference_alias WHERE alias_id = ? AND active = 1 LIMIT 1');
+    if ($stmt === false) {
+      return null;
+    }
+
+    $stmt->bind_param('s', $districtId);
+    if (!$stmt->execute()) {
+      $stmt->close();
+      return null;
+    }
+
+    $stmt->bind_result($target);
+    $aliasHit = $stmt->fetch();
+    $stmt->close();
+
+    if (!$aliasHit) {
+      return null;
+    }
+
+    return DB::getConference($target);
   }
 
   /**

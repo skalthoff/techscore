@@ -243,6 +243,54 @@ class School extends AbstractObject implements Publishable {
   }
 
   /**
+   * Returns the conference for a given season based on historical mapping.
+   *
+   * The lookup uses school_conference_history windows where end_season is
+   * exclusive; if no matching history exists, current conference is returned.
+   *
+   * @param Season|null $season
+   * @return Conference|null
+   */
+  public function getConferenceForSeason(Season $season = null) {
+    $current = $this->__get('conference');
+    if ($season === null || $season->id === null || $this->id === null) {
+      return $current;
+    }
+
+    $con = DB::connection();
+    $sql = 'SELECT conference
+            FROM school_conference_history
+            WHERE school = ?
+              AND (start_season IS NULL OR start_season <= ?)
+              AND (end_season IS NULL OR ? < end_season)
+            ORDER BY start_season DESC
+            LIMIT 1';
+    $stmt = $con->prepare($sql);
+    if ($stmt === false) {
+      return $current;
+    }
+
+    $seasonId = (int)$season->id;
+    $schoolId = (string)$this->id;
+    $stmt->bind_param('sii', $schoolId, $seasonId, $seasonId);
+    if (!$stmt->execute()) {
+      $stmt->close();
+      return $current;
+    }
+
+    $stmt->bind_result($confId);
+    $found = $stmt->fetch();
+    $stmt->close();
+
+    if (!$found || $confId === null) {
+      return $current;
+    }
+
+    $hist = DB::getConference($confId);
+    return ($hist === null) ? $current : $hist;
+  }
+
+  /**
    * Returns a list of unregistered sailors for the specified school
    *
    * @param RP::const $gender null for both or the gender code

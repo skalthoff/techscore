@@ -129,7 +129,7 @@ class ConferencePane extends AbstractUserPane {
     $form->add($table);
 
     $canDelete = false;
-    foreach (DB::getConferences() as $i => $conference) {
+    foreach (DB::getConferences(false) as $i => $conference) {
       $row = array();
 
       $id = $conference->id;

@@ -113,9 +113,10 @@ class SchoolReportMaker {
 
     // ------------------------------------------------------------
     // SCHOOL season summary
-    $conference_link = $school->conference;
+    $conference = $school->getConferenceForSeason($season);
+    $conference_link = $conference;
     if (DB::g(STN::PUBLISH_CONFERENCE_SUMMARY) !== null) {
-      $conference_link = new XA($school->conference->url, $conference_link);
+      $conference_link = new XA($conference->url, $conference_link);
     }
     $table = array(DB::g(STN::CONFERENCE_TITLE) => $conference_link,
                    "Number of Regattas" => $total);
@@ -254,9 +255,10 @@ class SchoolReportMaker {
 
     // ------------------------------------------------------------
     // SCHOOL season summary
-    $conference_link = $school->conference;
+    $conference = $school->getConferenceForSeason($season);
+    $conference_link = $conference;
     if (DB::g(STN::PUBLISH_CONFERENCE_SUMMARY) !== null) {
-      $conference_link = new XA($school->conference->url, $conference_link);
+      $conference_link = new XA($conference->url, $conference_link);
     }
     $table = array(
       DB::g(STN::CONFERENCE_TITLE) => $conference_link,

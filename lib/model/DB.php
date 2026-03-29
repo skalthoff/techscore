@@ -267,12 +267,17 @@ class DB {
   }
 
   /**
-   * Returns a list of conference objects
+   * Returns a list of conference objects.
    *
+   * @param boolean $active_only true (default) to exclude merged/retired conferences.
    * @return a list of conferences
    */
-  public static function getConferences() {
-    return self::getAll(self::T(DB::CONFERENCE));
+  public static function getConferences($active_only = true) {
+    $where = null;
+    if ($active_only !== false) {
+      $where = new DBCond('inactive_on', null);
+    }
+    return self::getAll(self::T(DB::CONFERENCE), $where);
   }
 
   /**
